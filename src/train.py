@@ -2,7 +2,7 @@ import pyrootutils
 import os
 from itertools import chain
 import time
-from utils.utils import make_submit
+
 root = pyrootutils.setup_root(
     search_from=__file__,
     indicator=[".git", "pyproject.toml"],
@@ -131,7 +131,7 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
 
     log.info("Starting making prediction files")
 
-    make_submit(predictions, now, path_submit)
+    utils.make_submit(predictions, now, path_submit)
 
     log.info(f"Best ckpt path: {ckpt_path}")
 

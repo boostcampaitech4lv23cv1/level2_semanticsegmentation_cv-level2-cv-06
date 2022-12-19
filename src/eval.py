@@ -5,7 +5,7 @@ import time
 import pandas as pd
 from tqdm.auto import tqdm
 import numpy as np
-from utils.utils import make_submit
+
 
 root = pyrootutils.setup_root(
     search_from=__file__,
@@ -101,7 +101,7 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
 
     log.info("Starting making prediction files")
 
-    make_submit(preds, now, path_submit)
+    utils.make_submit(preds, now, path_submit)
 
     log.info(f"Best ckpt path: {cfg.ckpt_path}")
 
