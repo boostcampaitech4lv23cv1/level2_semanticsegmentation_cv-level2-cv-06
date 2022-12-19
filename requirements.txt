@@ -1,6 +1,6 @@
 # --------- pytorch --------- #
 pytorch-lightning==1.5.10
-torchmetrics==0.7.2
+torchmetrics==0.10.3
 
 # --------- hydra --------- #
 hydra-core==1.2.0
@@ -10,7 +10,7 @@ hydra-optuna-sweeper==1.2.0
 # --------- loggers --------- #
 # wandb
 # neptune-client
-# mlflow
+mlflow
 # comet-ml
 
 # --------- others --------- #
@@ -18,7 +18,7 @@ pyrootutils     # standardizing the project root setup
 pre-commit      # hooks for applying linters on commit
 rich            # beautiful text formatting in terminal
 pytest          # tests
-# sh            # for running bash commands in some tests (linux/macos only)
+sh            # for running bash commands in some tests (linux/macos only)
 opencv-python
 seaborn
 albumentations

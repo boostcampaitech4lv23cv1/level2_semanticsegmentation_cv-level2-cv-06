@@ -18,11 +18,11 @@ Install dependencies
 
 ```bash
 # clone project
-git clone https://github.com/YourGithubName/your-repo-name
+git clone https://github.com/boostcampaitech4lv23cv1/level2_semanticsegmentation_cv-level2-cv-06.git
 cd your-repo-name
 
 # [OPTIONAL] create conda environment
-conda create -n myenv python=3.9
+conda create -n myenv python=3.8
 conda activate myenv
 
 # install pytorch according to instructions
@@ -40,6 +40,7 @@ python src/train.py trainer=cpu
 
 # train on GPU
 python src/train.py trainer=gpu
+# this is default setting
 ```
 
 Train model with chosen experiment configuration from [configs/experiment/](configs/experiment/)
@@ -52,3 +53,9 @@ You can override any parameter from command line like this
 
 ```bash
 python src/train.py trainer.max_epochs=20 datamodule.batch_size=64
+```
+You can use multiple run at once
+
+```bash
+python src/train.py datamodule.batch_size=16,32,64,128 model.arch_name="UnetPlusPlus", "Unet"
+```
