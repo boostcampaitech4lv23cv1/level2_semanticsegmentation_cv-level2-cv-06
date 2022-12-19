@@ -1,0 +1,7 @@
+_target_: src.datamodules.datamodule.SmpDataModule
+data_dir: '/opt/ml/input/data'
+# data_dir: '../input/data'
+batch_size: 16
+num_workers: 4
+pin_memory: False
+input_size: 256
