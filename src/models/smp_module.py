@@ -1,8 +1,13 @@
 from typing import Any, List
 import torch
 from pytorch_lightning import LightningModule
-from torchmetrics import MaxMetric, MeanMetric, JaccardIndex
-from torchmetrics import Accuracy, Precision, Recall
+from torchmetrics import MaxMetric, MeanMetric
+from torchmetrics.classification import (
+    MulticlassJaccardIndex,
+    MulticlassAccuracy,
+    MulticlassPrecision,
+    MulticlassRecall,
+)
 import albumentations as A
 import torch.nn as nn
 import numpy as np
@@ -37,21 +42,24 @@ class SmpModule(LightningModule):
 
         # use separate metric instance for train, val and test step
         # to ensure a proper reduction over the epoch
-        self.train_iou = JaccardIndex(num_classes=11, reduction=None)
-        self.val_iou = JaccardIndex(num_classes=11, reduction=None)
 
-        self.iou = JaccardIndex(num_classes=11, reduction="none")
-        self.accuracy = Accuracy(num_classes=11)
-        self.precision_ = Precision(
+        self.iou = MulticlassJaccardIndex(num_classes=11, average="none")
+        self.accuracy = MulticlassAccuracy(num_classes=11)
+        self.precision_ = MulticlassPrecision(
             num_classes=11, average="none", mdmc_average="global"
         )
-        self.recall = Recall(num_classes=11, average="none", mdmc_average="global")
+        self.recall = MulticlassRecall(
+            num_classes=11, average="none", mdmc_average="global"
+        )
+
+        self.precision2 = MulticlassPrecision(num_classes=11)
+        self.recall2 = MulticlassRecall(num_classes=11)
 
         self.train_loss = MeanMetric()
         self.val_loss = MeanMetric()
 
         # for logging best so far validation accuracy
-        self.val_miou_best = MaxMetric()
+        self.val_mIoU_best = MaxMetric()
 
     def forward(self, x: torch.Tensor):
         return self.model(x.float())
@@ -59,19 +67,18 @@ class SmpModule(LightningModule):
     def on_train_start(self):
         # by default lightning executes validation step sanity checks before training starts,
         # so we need to make sure val_acc_best doesn't store accuracy from these checks
-        self.val_miou_best.reset()
+        self.val_mIoU_best.reset()
 
     def step(self, batch: Any):
         img, mask = batch
         logits = self.forward(img)
         probs = torch.softmax(logits, dim=1)
-        pred = torch.argmax(logits, dim=1)
 
         loss = self.criterion(logits, mask.long())
-        return mask, logits, probs, pred, loss
+        return mask, logits, probs, loss
 
     def phase_step(self, batch, batch_idx, phase):
-        mask, logits, probs, pred, loss = self.step(batch)
+        mask, logits, probs, loss = self.step(batch)
 
         ious = self.iou(probs, mask)
         acc = self.accuracy(probs, mask)
@@ -79,16 +86,16 @@ class SmpModule(LightningModule):
         recalls = self.recall(probs, mask)
 
         # Filter nan values before averaging
-        miou = ious[~ious.isnan()].mean()
+        mIoU = ious[~ious.isnan()].mean()
         avg_precision = precisions[~precisions.isnan()].mean()
         avg_recall = recalls[~recalls.isnan()].mean()
 
         # Log metrics
-        self.log(f"{phase}/loss", loss, sync_dist=True)
-        self.log(f"{phase}/miou", miou, sync_dist=True),
-        self.log(f"{phase}/acc", acc, sync_dist=True)
-        self.log(f"{phase}/aP", avg_precision, sync_dist=True)
-        self.log(f"{phase}/aR", avg_recall, sync_dist=True)
+        self.log(f"{phase}/loss", loss, on_step=False, on_epoch=True)
+        self.log(f"{phase}/mIoU", mIoU, on_step=False, on_epoch=True),
+        self.log(f"{phase}/acc", acc, on_step=False, on_epoch=True)
+        self.log(f"{phase}/aP", avg_precision, on_step=False, on_epoch=True)
+        self.log(f"{phase}/aR", avg_recall, on_step=False, on_epoch=True)
 
         label2cat = {
             0: "Background",
@@ -107,57 +114,51 @@ class SmpModule(LightningModule):
         for c in range(11):
             cls = label2cat[c]
             if not ious[c].isnan():
-                self.log(f"{phase}_{cls}_iou", ious[c], sync_dist=True)
+                self.log(f"{phase}/{cls}_IoU", ious[c], on_step=False, on_epoch=True)
             if not precisions[c].isnan():
-                self.log(f"{phase}_{cls}_precision", precisions[c], sync_dist=True)
+                self.log(
+                    f"{phase}/{cls}_precision",
+                    precisions[c],
+                    on_step=False,
+                    on_epoch=True,
+                )
             if not recalls[c].isnan():
-                self.log(f"{phase}_{cls}_recall", recalls[c], sync_dist=True)
+                self.log(
+                    f"{phase}/{cls}_recall", recalls[c], on_step=False, on_epoch=True
+                )
 
-        return loss, logits, mask, pred
+        return loss, logits, mask, mIoU
 
     def training_step(self, batch: Any, batch_idx: int):
-        loss, logits, mask, pred = self.phase_step(batch, batch_idx, "train")
+        loss, logits, mask, _ = self.phase_step(batch, batch_idx, "train")
+
         self.log("LearningRate", self.optimizer.param_groups[0]["lr"])
 
         # we can return here dict with any tensors
-        # and then read it in some callback or in `training_epoch_end()` below
         # remember to always return loss from `training_step()` or else backpropagation will fail!
-        return {"loss": loss, "logits": logits, "mask": mask}
+        return {"loss": loss, "logits": logits.detach(), "mask": mask}
 
     def training_epoch_end(self, outputs: List[Any]):
-        # `outputs` is a list of dicts returned from `training_step()`
-        # iou_per_class = self.train_iou.compute().detach()
-        # miou = iou_per_class.mean()
-        # self.log("train/miou", miou, on_step=False, on_epoch=True, prog_bar=True)
-        # self.train_iou.reset()
         pass
 
     def validation_step(self, batch: Any, batch_idx: int):
 
-        loss, logits, mask, pred = self.phase_step(batch, batch_idx, "val")
+        loss, logits, mask, mIoU = self.phase_step(batch, batch_idx, "val")
 
-        return {"loss": loss, "logits": logits, "mask": mask}
+        return {"loss": loss, "logits": logits.detach(), "mask": mask, "val/mIoU": mIoU}
 
     def validation_epoch_end(self, outputs: List[Any]):
-        # iou_per_class = self.val_iou.compute().detach()
-        # miou = iou_per_class.mean()
-        # self.val_miou_best(miou)
+        batch_mIoU = [x["val/mIoU"] for x in outputs]
+        epoch_mIoU = torch.stack(batch_mIoU).mean()
+        self.val_mIoU_best(epoch_mIoU)
 
-        # self.log(
-        #     "val/best_miou",
-        #     self.val_miou_best.compute(),
-        #     on_step=False,
-        #     on_epoch=True,
-        #     prog_bar=True,
-        # )
-        # self.log(
-        #     "val/miou",
-        #     miou,
-        #     on_step=False,
-        #     on_epoch=True,
-        #     prog_bar=True,
-        # )
-        pass
+        self.log(
+            "val/best_mIoU",
+            self.val_mIoU_best.compute(),
+            on_step=False,
+            on_epoch=True,
+            prog_bar=True,
+        )
 
     def test_step(self, batch: Any, batch_idx: int):
         pass
@@ -166,13 +167,17 @@ class SmpModule(LightningModule):
         pass
 
     def predict_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> Any:
-        size = 256
-        transform = A.Compose([A.Resize(size, size)])
 
         imgs, file_name = batch
         outputs = self.forward(imgs)
         outputs = torch.argmax(outputs, dim=1).detach().cpu().numpy()
 
+        size = 256
+        transform = (
+            A.Compose([A.Resize(size, size)])
+            if imgs.shape[2] != size
+            else A.Compose([])
+        )
         temp_mask = []
         for img, mask in zip(imgs.detach().cpu().numpy(), outputs):
             mask = transform(image=img, mask=mask)["mask"]
@@ -194,7 +199,7 @@ class SmpModule(LightningModule):
             "optimizer": self.optimizer,
             "lr_scheduler": {
                 "scheduler": scheduler,
-                "monitor": "val/miou",
+                "monitor": "val/mIoU",
                 "interval": "epoch",
                 "frequency": 1,
             },
