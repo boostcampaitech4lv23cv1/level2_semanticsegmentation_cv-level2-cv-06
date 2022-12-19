@@ -5,6 +5,7 @@ import time
 import pandas as pd
 from tqdm.auto import tqdm
 import numpy as np
+from utils.utils import make_submit
 
 root = pyrootutils.setup_root(
     search_from=__file__,
@@ -100,28 +101,9 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
 
     log.info("Starting making prediction files")
 
-    submission = pd.read_csv(
-        "/opt/ml/input/code/submission/sample_submission.csv", index_col=None
-    )
+    make_submit(preds, now, path_submit)
 
-    size = 256
-    preds_array = np.empty((0, size**2), dtype=np.long)
-
-    preds_arr, file_names = preds[::2], preds[1::2]
-    file_names = list(sum(file_names, ()))
-    for i in range(len(preds_arr)):
-        preds_array = np.vstack((preds_array, preds_arr[i]))
-
-    for file_name, string in zip(tqdm(file_names), tqdm(preds_array)):
-        submission = submission.append(
-            {
-                "image_id": file_name,
-                "PredictionString": " ".join(str(e) for e in string.tolist()),
-            },
-            ignore_index=True,
-        )
-
-    submission.to_csv(os.path.join(path_submit, f"{now}.csv"), index=False)
+    log.info(f"Best ckpt path: {cfg.ckpt_path}")
 
     metric_dict = trainer.callback_metrics
 

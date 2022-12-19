@@ -12,6 +12,11 @@ from pytorch_lightning.utilities import rank_zero_only
 
 from src.utils import pylogger, rich_utils
 
+import pandas as pd
+import numpy as np
+from tqdm import tqdm
+
+
 log = pylogger.get_pylogger(__name__)
 
 
@@ -205,3 +210,27 @@ def close_loggers() -> None:
         if wandb.run:
             log.info("Closing wandb!")
             wandb.finish()
+
+def make_submit(preds, now, path_submit):
+    submission = pd.read_csv(
+        "/opt/ml/input/code/submission/sample_submission.csv", index_col=None
+    )
+
+    size = 256
+    preds_array = np.empty((0, size**2), dtype=np.long)
+
+    preds_arr, file_names = preds[::2], preds[1::2]
+    file_names = list(sum(file_names, ()))
+    for i in range(len(preds_arr)):
+        preds_array = np.vstack((preds_array, preds_arr[i]))
+
+    for file_name, string in zip(tqdm(file_names), tqdm(preds_array)):
+        submission = submission.append(
+            {
+                "image_id": file_name,
+                "PredictionString": " ".join(str(e) for e in string.tolist()),
+            },
+            ignore_index=True,
+        )
+
+    submission.to_csv(os.path.join(path_submit, f"{now}.csv"), index=False)

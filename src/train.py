@@ -1,10 +1,8 @@
 import pyrootutils
-import cv2
 import os
 from itertools import chain
-import zipfile
 import time
-
+from utils.utils import make_submit
 root = pyrootutils.setup_root(
     search_from=__file__,
     indicator=[".git", "pyproject.toml"],
@@ -124,29 +122,16 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
             model=model, datamodule=datamodule, ckpt_path=ckpt_path
         )
         predictions = list(chain.from_iterable(predictions))
-        now = time.strftime("%m%d_%H:%M")
-        path_submit = f"/opt/ml/aistage_smp/submit/{now}"
 
-        os.makedirs(path_submit, exist_ok=True)
-        os.chdir(path_submit)
+    now = time.strftime("%m%d_%H:%M")
+    path_submit = f"../submit/{now}"
 
-        log.info("Starting making prediction files")
-        sub_imgs = []
-        for i in range(0, len(predictions), 2):
-            for img, path in zip(predictions[i], predictions[i + 1]):
-                submit = path.split("SEM/")[-1]
-                cv2.imwrite(submit, img)
-                sub_imgs.append(submit)
+    os.makedirs(path_submit, exist_ok=True)
+    os.chdir(path_submit)
 
-        log.info("Starting predictions to Zip")
+    log.info("Starting making prediction files")
 
-        submission = zipfile.ZipFile(f"../submission_{now}.zip", "w")
-
-        for path in sub_imgs:
-            submission.write(path)
-        submission.close()
-
-        log.info("Zip file is made")
+    make_submit(predictions, now, path_submit)
 
     log.info(f"Best ckpt path: {ckpt_path}")
 
@@ -164,13 +149,9 @@ def main(cfg: DictConfig) -> Optional[float]:
     # train the model
     metric_dict, _ = train(cfg)
 
-    # safely retrieve metric value for hydra-based hyperparameter optimization
-    metric_value = utils.get_metric_value(
+    return utils.get_metric_value(
         metric_dict=metric_dict, metric_name=cfg.get("optimized_metric")
     )
-
-    # return optimized metric
-    return metric_value
 
 
 if __name__ == "__main__":
