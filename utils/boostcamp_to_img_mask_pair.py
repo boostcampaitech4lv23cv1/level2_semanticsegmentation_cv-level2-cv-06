@@ -55,9 +55,9 @@ class CustomDataLoader(Dataset):
         image_infos = self.coco.loadImgs(image_id)[0]
         image_from = os.path.join(dataset_root, image_infos["file_name"])
         image_filename = "_".join(image_infos["file_name"].split("/"))
-        image_to = os.path.join(self.output_root, "image", image_filename)
+        image_to = os.path.join(self.output_root, "images", image_filename)
         mask_filename = ".".join([image_filename.split(".")[0], "png"])
-        mask_to = os.path.join(self.output_root, "mask", mask_filename)
+        mask_to = os.path.join(self.output_root, "masks", mask_filename)
 
         # cv2 를 활용하여 image 불러오기
         image = cv2.imread(os.path.join(dataset_root, image_infos["file_name"]))
@@ -96,8 +96,8 @@ def convert():
     for output_dir_name, json_name in dataset_list:
         json_path = os.path.join(dataset_root, json_name)
         output_root = os.path.join(dataset_root, output_dir_name)
-        output_image_dir = os.path.join(output_root, "image")
-        output_mask_dir = os.path.join(output_root, "mask")
+        output_image_dir = os.path.join(output_root, "images")
+        output_mask_dir = os.path.join(output_root, "masks")
         create_dir(output_root)
         create_dir(output_image_dir)
         create_dir(output_mask_dir)
