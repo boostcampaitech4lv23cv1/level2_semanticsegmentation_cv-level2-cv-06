@@ -1,7 +1,8 @@
-import pyrootutils
 import os
-from itertools import chain
 import time
+from itertools import chain
+
+import pyrootutils
 
 root = pyrootutils.setup_root(
     search_from=__file__,
@@ -42,6 +43,8 @@ from pytorch_lightning import Callback, LightningDataModule, LightningModule, Tr
 from pytorch_lightning.loggers import LightningLoggerBase
 
 from src import utils
+import mlflow.pytorch
+from mlflow.utils.mlflow_tags import MLFLOW_RUN_NAME, MLFLOW_USER, MLFLOW_SOURCE_NAME
 
 log = utils.get_pylogger(__name__)
 
@@ -76,6 +79,10 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
 
     if len(cfg["logger"]) > 0 and list(cfg["logger"].keys())[0] == "wandb":
         cfg.logger.wandb.name += f"{cfg.model.arch_name}_{cfg.model.encoder_name}_scheduler_{cfg.model.scheduler._target_.split('.')[-1]}_lr_{str(cfg.model.optimizer.lr)}_batchsize_{str(cfg.datamodule.batch_size)}"
+
+    if len(cfg["logger"]) > 0 and list(cfg["logger"].keys())[0] == "mlflow":
+        cfg.logger.mlflow.run_name = f"{cfg.model.arch_name}_{cfg.model.encoder_name}_scheduler_{cfg.model.scheduler._target_.split('.')[-1]}_lr_{str(cfg.model.optimizer.lr)}_batchsize_{str(cfg.datamodule.batch_size)}"
+        cfg.logger.mlflow.tags = {MLFLOW_USER: "주헌", "model": cfg.model.arch_name}
 
     log.info("Instantiating loggers...")
     logger: List[LightningLoggerBase] = utils.instantiate_loggers(cfg.get("logger"))
@@ -131,7 +138,7 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
 
     log.info("Starting making prediction files")
 
-    utils.make_submit(predictions, now, path_submit)
+    utils.make_submit(predictions, path_submit)
 
     log.info(f"Best ckpt path: {ckpt_path}")
 
