@@ -227,3 +227,17 @@ poetry.toml
 .ionide
 
 # End of https://www.toptal.com/developers/gitignore/api/macos,visualstudiocode,python
+
+# mmsegmentation
+!mmsegmentation/
+mmsegmentation/*
+
+!mmsegmentation/inference.ipynb
+
+!mmsegmentation/configs/
+mmsegmentation/configs/*
+
+!mmsegmentation/configs/custom
+
+!mmsegmentation/run.sh
+/work_dirs
