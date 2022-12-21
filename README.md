@@ -22,8 +22,12 @@ git clone https://github.com/boostcampaitech4lv23cv1/level2_semanticsegmentation
 cd your-repo-name
 
 # [OPTIONAL] create conda environment
-conda create -n myenv python=3.8
+conda create -n myenv python=3.10 -y
 conda activate myenv
+
+conda install pytorch=1.11.0 torchvision cudatoolkit=11.3 -c pytorch
+
+pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.11/index.html
 
 # install pytorch according to instructions
 # https://pytorch.org/get-started/
