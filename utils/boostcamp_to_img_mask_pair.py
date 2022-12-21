@@ -92,6 +92,32 @@ class CustomDataLoader(Dataset):
         return len(self.coco.getImgIds())
 
 
+class TestDataLoader(Dataset):
+    """COCO format"""
+
+    def __init__(self, data_dir, output_root, transform=None):
+        super().__init__()
+        self.transform = transform
+        self.coco = COCO(data_dir)
+        self.output_root = output_root
+
+    def __getitem__(self, index: int):
+        # dataset이 index되어 list처럼 동작
+        image_id = self.coco.getImgIds(imgIds=index)
+        image_infos = self.coco.loadImgs(image_id)[0]
+        image_from = os.path.join(dataset_root, image_infos["file_name"])
+        image_filename = str(image_infos["id"]).zfill(4) + ".jpg"
+        image_to = os.path.join(self.output_root, "images", image_filename)
+
+        # transform -> albumentations 라이브러리 활용
+        assert self.transform is None
+        return image_from, image_to
+
+    def __len__(self) -> int:
+        # 전체 dataset의 size를 return
+        return len(self.coco.getImgIds())
+
+
 def convert():
     for output_dir_name, json_name in dataset_list:
         json_path = os.path.join(dataset_root, json_name)
@@ -108,6 +134,19 @@ def convert():
             image_from, image_to, mask, mask_to = dataset[i]
             copyfile(image_from, image_to)
             cv2.imwrite(mask_to, mask)
+
+    output_dir_name = "trash_test"
+    json_name = "test.json"
+    json_path = os.path.join(dataset_root, json_name)
+    output_root = os.path.join(dataset_root, output_dir_name)
+    output_image_dir = os.path.join(output_root, "images")
+    create_dir(output_image_dir)
+
+    dataset = TestDataLoader(data_dir=json_path, output_root=output_root)
+
+    for i in tqdm(range(len(dataset))):
+        image_from, image_to = dataset[i]
+        copyfile(image_from, image_to)
 
 
 if __name__ == "__main__":
