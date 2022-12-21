@@ -241,3 +241,6 @@ mmsegmentation/configs/*
 
 !mmsegmentation/run.sh
 /work_dirs
+
+# mlflow
+mlruns/
