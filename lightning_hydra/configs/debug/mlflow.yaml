@@ -1,0 +1,29 @@
+# @package _global_
+
+# runs with execution time profiling
+
+defaults:
+  - default.yaml
+
+logger:
+  mlflow:
+    _target_: pytorch_lightning.loggers.mlflow.MLFlowLogger
+    experiment_name: "segmentation_pytorch"
+    run_name: ""
+    # tracking_uri: ${paths.log_dir}/mlflow/mlruns # run `mlflow ui` command inside the `logs/mlflow/` dir to open the UI
+    tracking_uri: "http://211.114.51.32:5000/"
+    tags: null
+    # save_dir: "./mlruns"
+    prefix: ""
+    artifact_location: "sftp://noops:zhflsdl3@211.114.51.32:5005/noops_storage/noops-test/artifacts"
+    # run_id: ""
+datamodule:
+  num_workers: 4 # debuggers don't like multiprocessing
+trainer:
+  max_epochs: 1
+  accelerator: gpu # debuggers don't like gpus
+  devices: 1 # debuggers don't like multiprocessing
+  detect_anomaly: true # raise exception if NaN or +/-inf is detected in any tensor
+  limit_train_batches: 0.01
+  limit_val_batches: 0.05
+  limit_test_batches: 0.05

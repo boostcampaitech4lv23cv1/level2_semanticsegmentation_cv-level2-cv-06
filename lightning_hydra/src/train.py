@@ -107,6 +107,7 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
 
     if cfg.get("train"):
         log.info("Starting training!")
+        mlflow.pytorch.autolog(log_models=True)
         trainer.fit(model=model, datamodule=datamodule, ckpt_path=cfg.get("ckpt_path"))
 
     train_metrics = trainer.callback_metrics
@@ -114,6 +115,12 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
         print("Segmentation end !")
 
     ckpt_path = trainer.checkpoint_callback.best_model_path
+
+    if ckpt_path:
+        mlflow.log_artifact(ckpt_path, artifact_path="model")
+        mlflow.pytorch.log_model(model,artifact_path="model")
+        mlflow.pytorch.save_model()
+        log.info("upload mlflow best ckpt")
 
     if cfg.get("test"):
         log.info("Starting predicting!")

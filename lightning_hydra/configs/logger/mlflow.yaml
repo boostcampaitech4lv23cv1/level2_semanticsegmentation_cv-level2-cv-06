@@ -2,12 +2,14 @@
 
 mlflow:
   _target_: pytorch_lightning.loggers.mlflow.MLFlowLogger
-  experiment_name: "smp"
+  experiment_name: "segmentation_pytorch"
   run_name: ""
   # tracking_uri: ${paths.log_dir}/mlflow/mlruns # run `mlflow ui` command inside the `logs/mlflow/` dir to open the UI
   tracking_uri: "http://211.114.51.32:5000/"
   tags: null
   # save_dir: "./mlruns"
   prefix: ""
-  artifact_location: null
+  artifact_location: "sftp://noops:zhflsdl3@211.114.51.32:5005/noops_storage/noops-test/artifacts"
   # run_id: ""
+datamodule:
+  batch_size: 32
