@@ -16,4 +16,4 @@ task_name: "eval"
 tags: ["dev"]
 
 # passing checkpoint path is necessary for evaluation
-ckpt_path: "/opt/ml/aistage_smp/logs/train/runs/base/UnetPlusPlus/timm-mobilenetv3_small_100/2022-12-19_20-21-24/checkpoints/epoch_004.ckpt"
+ckpt_path: "/opt/ml/aistage_smp/lightning_hydra/logs/train/runs/base/UnetPlusPlus/timm-mobilenetv3_small_100/2022-12-19_20-21-24/checkpoints/epoch_004.ckpt"
