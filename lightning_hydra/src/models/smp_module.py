@@ -91,12 +91,17 @@ class SmpModule(LightningModule):
         avg_recall = recalls[~recalls.isnan()].mean()
 
         # Log metrics
-        self.log(f"{phase}/loss", loss, on_step=False, on_epoch=True)
-        self.log(f"{phase}/mIoU", mIoU, on_step=False, on_epoch=True),
-        self.log(f"{phase}/acc", acc, on_step=False, on_epoch=True)
-        self.log(f"{phase}/aP", avg_precision, on_step=False, on_epoch=True)
-        self.log(f"{phase}/aR", avg_recall, on_step=False, on_epoch=True)
-
+        self.log_dict(
+            {
+                f"{phase}/loss": loss,
+                f"{phase}/mIoU": mIoU,
+                f"{phase}/acc": acc,
+                f"{phase}/aP": avg_precision,
+                f"{phase}/aR": avg_recall,
+            },
+            on_step=False,
+            on_epoch=True,
+        )
         label2cat = {
             0: "Background",
             1: "General_trash",
