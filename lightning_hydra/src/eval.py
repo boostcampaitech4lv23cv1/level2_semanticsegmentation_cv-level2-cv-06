@@ -1,10 +1,6 @@
 import pyrootutils
 from itertools import chain
-import os
-import time
-import pandas as pd
 from tqdm.auto import tqdm
-import numpy as np
 
 
 root = pyrootutils.setup_root(
@@ -93,16 +89,13 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
     preds = trainer.predict(model=model, datamodule=datamodule, ckpt_path=cfg.ckpt_path)
     preds = list(chain.from_iterable(preds))
 
-    now = time.strftime("%m%d_%H:%M")
-    path_submit = f"../submit/{now}"
-
-    os.makedirs(path_submit, exist_ok=True)
-    os.chdir(path_submit)
+    now = utils.prepare_sub_path()
 
     log.info("Starting making prediction files")
 
-    utils.make_submit(preds, now, path_submit)
+    utils.make_submit(preds, now)
 
+    log.info("Finishing making prediction files")
     log.info(f"Best ckpt path: {cfg.ckpt_path}")
 
     metric_dict = trainer.callback_metrics

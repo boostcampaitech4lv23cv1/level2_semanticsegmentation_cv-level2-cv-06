@@ -61,7 +61,6 @@ class SmpDataModule(LightningDataModule):
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
             shuffle=True,
-            # collate_fn=self.collate_fn,
             persistent_workers=True,
         )
 
@@ -72,7 +71,6 @@ class SmpDataModule(LightningDataModule):
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
             shuffle=False,
-            # collate_fn=self.collate_fn,
             persistent_workers=True,
         )
 
@@ -83,7 +81,6 @@ class SmpDataModule(LightningDataModule):
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
             shuffle=False,
-            # collate_fn=self.collate_fn,
             persistent_workers=True,
         )
 
@@ -94,13 +91,6 @@ class SmpDataModule(LightningDataModule):
     def load_state_dict(self, state_dict: Dict[str, Any]):
         """Things to do when loading checkpoint."""
         pass
-
-    # def collate_fn(self, batch):
-    #     img, mask, img_infos = list(zip(*batch))
-    #     batched_imgs = cat_list(images, fill_value=0)
-    #     batched_targets = cat_list(targets, fill_value=255)
-
-    #     return tuple(zip(*batch))
 
 
 if __name__ == "__main__":
