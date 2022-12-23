@@ -211,7 +211,8 @@ def close_loggers() -> None:
             log.info("Closing wandb!")
             wandb.finish()
 
-def make_submit(preds, now, path_submit):
+
+def make_submit(preds, now):
     submission = pd.read_csv(
         "/opt/ml/input/code/submission/sample_submission.csv", index_col=None
     )
@@ -233,4 +234,13 @@ def make_submit(preds, now, path_submit):
             ignore_index=True,
         )
 
-    submission.to_csv(os.path.join(path_submit, f"{now}.csv"), index=False)
+    submission.to_csv(f"{now}.csv", index=False)
+
+
+def prepare_sub_path():
+    now = time.strftime("%m%d_%H:%M")
+    path_submit = f"./../submit/{now}"
+    assert os.path.isdir("./../submit/")
+    os.makedirs(path_submit, exist_ok=True)
+    os.chdir(path_submit)
+    return now

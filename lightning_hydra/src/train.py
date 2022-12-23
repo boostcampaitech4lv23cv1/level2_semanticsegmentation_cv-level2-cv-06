@@ -118,7 +118,7 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
 
     if ckpt_path:
         mlflow.log_artifact(ckpt_path, artifact_path="model")
-        mlflow.pytorch.log_model(model,artifact_path="model")
+        mlflow.pytorch.log_model(model, artifact_path="model")
         mlflow.pytorch.save_model()
         log.info("upload mlflow best ckpt")
 
@@ -137,16 +137,13 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
         )
         predictions = list(chain.from_iterable(predictions))
 
-    now = time.strftime("%m%d_%H:%M")
-    path_submit = f"../submit/{now}"
-
-    os.makedirs(path_submit, exist_ok=True)
-    os.chdir(path_submit)
+    now = utils.prepare_sub_path()
 
     log.info("Starting making prediction files")
 
-    utils.make_submit(predictions, path_submit)
+    utils.make_submit(predictions, now)
 
+    log.info("Finishing making prediction files")
     log.info(f"Best ckpt path: {ckpt_path}")
 
     test_metrics = trainer.callback_metrics
