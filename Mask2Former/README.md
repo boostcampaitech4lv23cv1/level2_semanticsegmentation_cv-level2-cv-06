@@ -7,7 +7,7 @@ git clone https://github.com/boostcampaitech4lv23cv1/level2_semanticsegmentation
 
 2) Mask2Former directory 삭제
 ```bash
-cd 
+cd
 level2_semanticsegmentation_cv-level2-cv-06
 rm -rf Mask2Former
 ```
@@ -18,7 +18,7 @@ git clone https://github.com/facebookresearch/Mask2Former.git
 ```
 4. 기존 수정 내용 복구
 ```bash
-checkout .
+git checkout .
 ```
 
 ## Mask2Former 사용법 (with MLflow)
