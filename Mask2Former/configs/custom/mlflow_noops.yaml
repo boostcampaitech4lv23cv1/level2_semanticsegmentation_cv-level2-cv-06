@@ -1,7 +1,0 @@
-_BASE_: Custom-SemanticSegmentation_test.yaml
-MLFLOW:
-  EXPERIMENT_NAME: "Detectron2 Test Experiment"
-  RUN_DESCRIPTION: "ya-ho"
-  RUN_NAME: "Test Run 01"
-  TRACKING_URI: "http://211.114.51.32:5001"
-  ARTIFACT_URI: "sftp://noops:zhflsdl3@211.114.51.32:5005/noops_storage/noops-mlflow-tracking-server/artifacts"

@@ -1,9 +1,11 @@
-_BASE_: mlflow_noops.yaml
+_BASE_: semantic_segmentation_base.yaml
+
 OUTPUT_DIR: ./maskformer2_R50_bs16_160k_mlflow
 MLFLOW:
   EXPERIMENT_NAME: "Detectron2 Test Experiment4"
-  RUN_DESCRIPTION: "ya-ho"
-  RUN_NAME: "Test Run 01"
+  RUN_DESCRIPTION: "baseline_model"
+  RUN_NAME: "baseline Run 01"
+
 MODEL:
   META_ARCHITECTURE: "MaskFormer"
   SEM_SEG_HEAD:

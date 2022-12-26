@@ -244,3 +244,5 @@ mmsegmentation/configs/*
 
 # mlflow
 mlruns/
+
+Mask2Former/
