@@ -51,3 +51,4 @@ class MLflowHook(HookBase):
             with open(os.path.join(self.cfg.OUTPUT_DIR, "model-config.yaml"), "w") as f:
                 f.write(self.cfg.dump())
             mlflow.log_artifacts(self.cfg.OUTPUT_DIR)
+        mlflow.end_run()
