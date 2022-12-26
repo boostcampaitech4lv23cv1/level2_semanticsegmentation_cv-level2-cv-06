@@ -43,8 +43,10 @@ class MLflowHook(HookBase):
     def after_step(self):
         with torch.no_grad():
             latest_metrics = self.trainer.storage.latest()
+            output_metrics = {}
             for k, v in latest_metrics.items():
-                mlflow.log_metric(key=k, value=v[0], step=v[1])
+                output_metrics[k] = v[0]
+            mlflow.log_metrics(metrics=output_metrics, step=v[1])
 
     def after_train(self):
         with torch.no_grad():
