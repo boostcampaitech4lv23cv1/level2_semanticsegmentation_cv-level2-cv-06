@@ -2,7 +2,7 @@
 1) conda create --name [NAME] python=3.8
 2) cudatoolkitdev=11.0 설치
 ```bash
-conda config --apend channels conda-forge
+conda config --append channels conda-forge
 conda install cudatoolkit=11.0 -c conda-forge
 conda install cudatoolkit-dev=11.0 -c conda-forge
 ```
