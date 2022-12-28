@@ -1,4 +1,4 @@
-_BASE_: maskformer2_R50_bs16_160k_mlflow.yaml
+_BASE_: custommaskformer2_R50_bs16_160k_mlflow.yaml
 
 OUTPUT_DIR: ./maskformer2_swin_large_IN21k_384_bs16_160k
 MLFLOW:
