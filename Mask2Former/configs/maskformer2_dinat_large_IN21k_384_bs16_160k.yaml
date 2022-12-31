@@ -1,10 +1,10 @@
 _BASE_: maskformer2_R50_bs16_160k_mlflow.yaml
 
-OUTPUT_DIR: ./log/maskformer2_dinat_L_IN21k_384_bs6_160k
+OUTPUT_DIR: ./log/maskformer2_dinat_L_IN21k_384_bs6_160k_panoptic
 MLFLOW:
-  EXPERIMENT_NAME: "Boostcamp S.S. Competition"
+  EXPERIMENT_NAME: "Dinat"
   RUN_DESCRIPTION: "Mask2Former, DiNAT-Large"
-  RUN_NAME: "maskformer2_dinat_L_IN21k_384_bs6_160k"
+  RUN_NAME: "base"
 MODEL:
   BACKBONE:
     NAME: "D2DiNAT"
@@ -21,12 +21,14 @@ MODEL:
         [1, 1, 1, 1, 1],
       ]
     DROP_PATH_RATE: 0.3
-  WEIGHTS: "https://shi-labs.com/projects/dinat/checkpoints/m2f/mask2former_dinat_large_ade20k_semantic.pth"
+  # WEIGHTS: "https://shi-labs.com/projects/dinat/checkpoints/m2f/mask2former_dinat_large_ade20k_semantic.pth"
+  WEIGHTS: "https://shi-labs.com/projects/dinat/checkpoints/m2f/mask2former_dinat_large_ade20k_panoptic.pth"
   PIXEL_MEAN: [123.675, 116.280, 103.530]
   PIXEL_STD: [58.395, 57.120, 57.375]
 SOLVER:
   MAX_ITER: 50000
   BASE_LR: 0.0001
+  CHECKPOINT_PERIOD: 50001
   AMP:
     ENABLED: False
 
@@ -46,7 +48,7 @@ INPUT:
   SIZE_DIVISIBILITY: 640 # used in dataset mapper
   FORMAT: "RGB"
 TEST:
-  EVAL_PERIOD: 3000
+  EVAL_PERIOD: 437
   AUG:
     ENABLED: False
     MIN_SIZES: [320, 480, 640, 800, 960, 1120]
