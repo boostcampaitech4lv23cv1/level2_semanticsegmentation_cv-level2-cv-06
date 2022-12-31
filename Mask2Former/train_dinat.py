@@ -8,33 +8,24 @@ This source code is licensed under the license found in the
 LICENSE file in the root directory of this source tree.
 """
 
-import detectron2.utils.comm as comm
-from detectron2.engine import (
-    default_argument_parser,
-    launch,
-    default_setup,
-)
-from detectron2.config import CfgNode, get_cfg
-
-from detectron2.projects.deeplab import add_deeplab_config
-from detectron2.utils.logger import setup_logger
+from dinat import *
+from hooks_mlflow import MLflowHook
 
 # MaskFormer
 from mask2former import add_maskformer2_config
+from mlflow_config import add_mlflow_config
 
 # from register_trash_dataset import register_all_trash_full
 from register_trash_dataset_noops import register_all_trash_full
-from mlflow_config import add_mlflow_config
 from train_net_mlflow import Trainer
-from dinat import *
-from hooks_mlflow import MLflowHook
-from detectron2.engine import (
-    default_argument_parser,
-    default_setup,
-    launch,
-)
+
+import detectron2.utils.comm as comm
 from detectron2.checkpoint import DetectionCheckpointer
+from detectron2.config import CfgNode, get_cfg
+from detectron2.engine import default_argument_parser, default_setup, launch
 from detectron2.evaluation import verify_results
+from detectron2.projects.deeplab import add_deeplab_config
+from detectron2.utils.logger import setup_logger
 
 
 def add_dinat_config(cfg):
