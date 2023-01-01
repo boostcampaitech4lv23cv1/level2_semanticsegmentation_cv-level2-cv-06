@@ -4,24 +4,35 @@ MaskFormer Training Script.
 
 This script is a simplified version of the training script in detectron2/tools.
 """
-try:
-    # ignore ShapelyDeprecationWarning from fvcore
-    from shapely.errors import ShapelyDeprecationWarning
+import contextlib
+
+with contextlib.suppress(Exception):
     import warnings
 
-    warnings.filterwarnings("ignore", category=ShapelyDeprecationWarning)
-except:
-    pass
+    from shapely.errors import ShapelyDeprecationWarning
 
+    warnings.filterwarnings("ignore", category=ShapelyDeprecationWarning)
 import copy
 import itertools
 import logging
 import os
-
 from collections import OrderedDict
 from typing import Any, Dict, List, Set
 
 import torch
+from hooks_mlflow import MLflowHook
+
+# MaskFormer
+from mask2former import (
+    InstanceSegEvaluator,
+    MaskFormerSemanticDatasetMapper,
+    SemanticSegmentorWithTTA,
+    add_maskformer2_config,
+)
+from mlflow_config import add_mlflow_config
+
+# from register_trash_dataset import register_all_trash_full
+from register_trash_dataset_noops import register_all_trash_full
 
 import detectron2.utils.comm as comm
 from detectron2.checkpoint import DetectionCheckpointer
@@ -29,10 +40,12 @@ from detectron2.config import get_cfg
 from detectron2.data import MetadataCatalog, build_detection_train_loader
 from detectron2.engine import (
     DefaultTrainer,
+    PeriodicWriter,
     default_argument_parser,
     default_setup,
     launch,
 )
+from detectron2.engine.hooks import BestCheckpointer
 from detectron2.evaluation import (
     CityscapesInstanceEvaluator,
     CityscapesSemSegEvaluator,
@@ -46,23 +59,6 @@ from detectron2.evaluation import (
 from detectron2.projects.deeplab import add_deeplab_config, build_lr_scheduler
 from detectron2.solver.build import maybe_add_gradient_clipping
 from detectron2.utils.logger import setup_logger
-
-# MaskFormer
-from mask2former import (
-    COCOInstanceNewBaselineDatasetMapper,
-    COCOPanopticNewBaselineDatasetMapper,
-    InstanceSegEvaluator,
-    MaskFormerInstanceDatasetMapper,
-    MaskFormerPanopticDatasetMapper,
-    MaskFormerSemanticDatasetMapper,
-    SemanticSegmentorWithTTA,
-    add_maskformer2_config,
-)
-
-# from register_trash_dataset import register_all_trash_full
-from register_trash_dataset_noops import register_all_trash_full
-from hooks_mlflow import MLflowHook
-from mlflow_config import add_mlflow_config
 
 # from pseudo_register_trash_dataset import register_all_trash_full
 
@@ -98,16 +94,17 @@ class Trainer(DefaultTrainer):
         if evaluator_type == "coco":
             evaluator_list.append(COCOEvaluator(dataset_name, output_dir=output_folder))
         # panoptic segmentation
-        if evaluator_type in [
-            "coco_panoptic_seg",
-            "ade20k_panoptic_seg",
-            "cityscapes_panoptic_seg",
-            "mapillary_vistas_panoptic_seg",
-        ]:
-            if cfg.MODEL.MASK_FORMER.TEST.PANOPTIC_ON:
-                evaluator_list.append(
-                    COCOPanopticEvaluator(dataset_name, output_folder)
-                )
+        if (
+            evaluator_type
+            in [
+                "coco_panoptic_seg",
+                "ade20k_panoptic_seg",
+                "cityscapes_panoptic_seg",
+                "mapillary_vistas_panoptic_seg",
+            ]
+            and cfg.MODEL.MASK_FORMER.TEST.PANOPTIC_ON
+        ):
+            evaluator_list.append(COCOPanopticEvaluator(dataset_name, output_folder))
         # COCO
         if (
             evaluator_type == "coco_panoptic_seg"
@@ -173,11 +170,9 @@ class Trainer(DefaultTrainer):
         # LVIS
         if evaluator_type == "lvis":
             return LVISEvaluator(dataset_name, output_dir=output_folder)
-        if len(evaluator_list) == 0:
+        if not evaluator_list:
             raise NotImplementedError(
-                "no Evaluator for the dataset {} with the type {}".format(
-                    dataset_name, evaluator_type
-                )
+                f"no Evaluator for the dataset {dataset_name} with the type {evaluator_type}"
             )
         elif len(evaluator_list) == 1:
             return evaluator_list[0]
@@ -188,26 +183,10 @@ class Trainer(DefaultTrainer):
         # Semantic segmentation dataset mapper
         if cfg.INPUT.DATASET_MAPPER_NAME == "mask_former_semantic":
             mapper = MaskFormerSemanticDatasetMapper(cfg, True)
-            return build_detection_train_loader(cfg, mapper=mapper)
-        # Panoptic segmentation dataset mapper
-        elif cfg.INPUT.DATASET_MAPPER_NAME == "mask_former_panoptic":
-            mapper = MaskFormerPanopticDatasetMapper(cfg, True)
-            return build_detection_train_loader(cfg, mapper=mapper)
-        # Instance segmentation dataset mapper
-        elif cfg.INPUT.DATASET_MAPPER_NAME == "mask_former_instance":
-            mapper = MaskFormerInstanceDatasetMapper(cfg, True)
-            return build_detection_train_loader(cfg, mapper=mapper)
-        # coco instance segmentation lsj new baseline
-        elif cfg.INPUT.DATASET_MAPPER_NAME == "coco_instance_lsj":
-            mapper = COCOInstanceNewBaselineDatasetMapper(cfg, True)
-            return build_detection_train_loader(cfg, mapper=mapper)
-        # coco panoptic segmentation lsj new baseline
-        elif cfg.INPUT.DATASET_MAPPER_NAME == "coco_panoptic_lsj":
-            mapper = COCOPanopticNewBaselineDatasetMapper(cfg, True)
-            return build_detection_train_loader(cfg, mapper=mapper)
         else:
             mapper = None
-            return build_detection_train_loader(cfg, mapper=mapper)
+
+        return build_detection_train_loader(cfg, mapper=mapper)
 
     @classmethod
     def build_lr_scheduler(cls, cfg, optimizer):
@@ -298,7 +277,7 @@ class Trainer(DefaultTrainer):
             )
         else:
             raise NotImplementedError(f"no optimizer type {optimizer_type}")
-        if not cfg.SOLVER.CLIP_GRADIENTS.CLIP_TYPE == "full_model":
+        if cfg.SOLVER.CLIP_GRADIENTS.CLIP_TYPE != "full_model":
             optimizer = maybe_add_gradient_clipping(cfg, optimizer)
         return optimizer
 
@@ -315,8 +294,22 @@ class Trainer(DefaultTrainer):
             for name in cfg.DATASETS.TEST
         ]
         res = cls.test(cfg, model, evaluators)
-        res = OrderedDict({k + "_TTA": v for k, v in res.items()})
+        res = OrderedDict({f"{k}_TTA": v for k, v in res.items()})
         return res
+
+    def build_hooks(self):
+        cfg = self.cfg.clone()
+        hooks = super().build_hooks()
+        hooks.append(
+            BestCheckpointer(
+                cfg.TEST.EVAL_PERIOD,
+                DetectionCheckpointer(self.model, cfg.OUTPUT_DIR),
+                "sem_seg/mIoU",
+                "max",
+                file_prefix="mIoU_best",
+            )
+        )
+        return hooks
 
 
 def setup(args):
@@ -345,21 +338,24 @@ def main(args):
     mlflow_hook = MLflowHook(cfg)
 
     if args.eval_only:
-        model = Trainer.build_model(cfg)
-        DetectionCheckpointer(model, save_dir=cfg.OUTPUT_DIR).resume_or_load(
-            cfg.MODEL.WEIGHTS, resume=args.resume
-        )
-        res = Trainer.test(cfg, model)
-        if cfg.TEST.AUG.ENABLED:
-            res.update(Trainer.test_with_TTA(cfg, model))
-        if comm.is_main_process():
-            verify_results(cfg, res)
-        return res
-
+        return test_mode(cfg, args)
     trainer = Trainer(cfg)
     trainer.register_hooks(hooks=[mlflow_hook])
     trainer.resume_or_load(resume=args.resume)
     return trainer.train()
+
+
+def test_mode(cfg, args):
+    model = Trainer.build_model(cfg)
+    DetectionCheckpointer(model, save_dir=cfg.OUTPUT_DIR).resume_or_load(
+        cfg.MODEL.WEIGHTS, resume=args.resume
+    )
+    res = Trainer.test(cfg, model)
+    if cfg.TEST.AUG.ENABLED:
+        res.update(Trainer.test_with_TTA(cfg, model))
+    if comm.is_main_process():
+        verify_results(cfg, res)
+    return res
 
 
 if __name__ == "__main__":

@@ -1,0 +1,56 @@
+_BASE_: maskformer2_R50_bs16_160k_mlflow.yaml
+
+OUTPUT_DIR: ./log/maskformer2_dinat_L_IN21k_384_bs6_160k_panoptic
+MLFLOW:
+  EXPERIMENT_NAME: "Dinat"
+  RUN_DESCRIPTION: "Mask2Former, DiNAT-Large"
+  RUN_NAME: "base"
+MODEL:
+  BACKBONE:
+    NAME: "D2DiNAT"
+  DINAT:
+    EMBED_DIM: 192
+    DEPTHS: [3, 4, 18, 5]
+    NUM_HEADS: [6, 12, 24, 48]
+    KERNEL_SIZE: 11
+    DILATIONS:
+      [
+        [1, 14, 1],
+        [1, 4, 1, 7],
+        [1, 2, 1, 3, 1, 2, 1, 3, 1, 2, 1, 3, 1, 2, 1, 3, 1, 3],
+        [1, 1, 1, 1, 1],
+      ]
+    DROP_PATH_RATE: 0.3
+  # WEIGHTS: "https://shi-labs.com/projects/dinat/checkpoints/m2f/mask2former_dinat_large_ade20k_semantic.pth"
+  WEIGHTS: "https://shi-labs.com/projects/dinat/checkpoints/m2f/mask2former_dinat_large_ade20k_panoptic.pth"
+  PIXEL_MEAN: [123.675, 116.280, 103.530]
+  PIXEL_STD: [58.395, 57.120, 57.375]
+SOLVER:
+  MAX_ITER: 50000
+  BASE_LR: 0.0001
+  CHECKPOINT_PERIOD: 50001
+  AMP:
+    ENABLED: False
+
+INPUT:
+  MIN_SIZE_TRAIN:
+    !!python/object/apply:eval ["[int(x * 0.1 * 640) for x in range(5, 21)]"]
+  MIN_SIZE_TRAIN_SAMPLING: "choice"
+  MIN_SIZE_TEST: 512
+  MAX_SIZE_TRAIN: 2048
+  MAX_SIZE_TEST: 2048
+  CROP:
+    ENABLED: True
+    TYPE: "absolute"
+    SIZE: (512, 512)
+    SINGLE_CATEGORY_MAX_AREA: 1.0
+  COLOR_AUG_SSD: True
+  SIZE_DIVISIBILITY: 640 # used in dataset mapper
+  FORMAT: "RGB"
+TEST:
+  EVAL_PERIOD: 437
+  AUG:
+    ENABLED: False
+    MIN_SIZES: [320, 480, 640, 800, 960, 1120]
+    MAX_SIZE: 4480
+    FLIP: True
