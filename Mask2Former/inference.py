@@ -9,7 +9,6 @@ import re
 import warnings
 from pathlib import Path
 
-import albumentations as A
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
@@ -18,7 +17,6 @@ warnings.filterwarnings("ignore")
 
 from typing import List, Optional, Tuple
 
-import cv2
 import kornia as K
 import torch
 import torch.nn as nn
@@ -34,7 +32,6 @@ from detectron2.data.detection_utils import read_image
 
 # import some common detectron2 utilities
 from detectron2.engine import DefaultPredictor
-from detectron2.modeling import build_model
 from detectron2.projects.deeplab import add_deeplab_config
 
 
@@ -80,7 +77,7 @@ class BatchPredictor(DefaultPredictor):
                 image = image[:, :, ::-1]
             height, width = image.shape[:2]
 
-            # image = self.aug.get_transform(image).apply_image(image)
+            image = self.aug.get_transform(image).apply_image(image)
             image = image.astype("float32").transpose(2, 0, 1)
             image = torch.as_tensor(image)
             data.append({"image": image, "height": height, "width": width})
@@ -110,7 +107,7 @@ class BatchPredictor(DefaultPredictor):
             pin_memory=True,
         )
         size = 256
-        transform_k = nn.Sequential(K.geometry.Resize((size, size)))
+        transform = nn.Sequential(K.geometry.Resize((size, size)))
         preds_array = np.empty((0, size**2), dtype=np.long)
 
         with torch.no_grad():
@@ -119,7 +116,7 @@ class BatchPredictor(DefaultPredictor):
                 outs = torch.cat(
                     [out["sem_seg"].unsqueeze(0) for out in outs], 0
                 ).argmax(1)
-                masks = transform_k(outs.type(torch.FloatTensor)).detach().cpu().numpy()
+                masks = transform(outs.type(torch.FloatTensor)).detach().cpu().numpy()
                 oms = masks.reshape([len(batch), -1]).astype(int)
                 preds_array = np.vstack((preds_array, oms))
                 del masks, oms, outs
