@@ -17,7 +17,7 @@ warnings.filterwarnings("ignore")
 
 from typing import List, Optional, Tuple
 
-import kornia as K
+import albumentations as A
 import torch
 import torch.nn as nn
 
@@ -107,19 +107,21 @@ class BatchPredictor(DefaultPredictor):
             pin_memory=True,
         )
         size = 256
-        transform = nn.Sequential(K.geometry.Resize((size, size)))
+        transform = A.Compose([A.Resize(size, size, always_apply=True, p=1.0)])
         preds_array = np.empty((0, size**2), dtype=np.long)
-
         with torch.no_grad():
             for batch in tqdm(loader, total=len(loader)):
                 outs = self.model(batch)
                 outs = torch.cat(
                     [out["sem_seg"].unsqueeze(0) for out in outs], 0
                 ).argmax(1)
-                masks = transform(outs.type(torch.FloatTensor)).detach().cpu().numpy()
-                oms = masks.reshape([len(batch), -1]).astype(int)
-                preds_array = np.vstack((preds_array, oms))
-                del masks, oms, outs
+                outs = outs.detach().cpu().numpy()
+                for out in outs:
+                    # out=out.astype(np.uint8)
+                    mask = transform(image=out)["image"]
+                    oms = mask.reshape([1, -1]).astype(int)
+                    preds_array = np.vstack((preds_array, oms))
+                del mask, oms, outs
                 torch.cuda.empty_cache()
 
         return image_id, preds_array
