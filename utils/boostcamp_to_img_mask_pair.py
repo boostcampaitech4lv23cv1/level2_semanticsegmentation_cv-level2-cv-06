@@ -106,7 +106,8 @@ class TestDataLoader(Dataset):
         image_id = self.coco.getImgIds(imgIds=index)
         image_infos = self.coco.loadImgs(image_id)[0]
         image_from = os.path.join(dataset_root, image_infos["file_name"])
-        image_filename = str(image_infos["id"]).zfill(4) + ".jpg"
+        image_filename = "_".join(image_infos["file_name"].split("/"))
+        # image_filename = str(image_infos["id"]).zfill(4) + ".jpg"
         image_to = os.path.join(self.output_root, "images", image_filename)
 
         # transform -> albumentations 라이브러리 활용
@@ -119,21 +120,21 @@ class TestDataLoader(Dataset):
 
 
 def convert():
-    for output_dir_name, json_name in dataset_list:
-        json_path = os.path.join(dataset_root, json_name)
-        output_root = os.path.join(dataset_root, output_dir_name)
-        output_image_dir = os.path.join(output_root, "images")
-        output_mask_dir = os.path.join(output_root, "masks")
-        create_dir(output_root)
-        create_dir(output_image_dir)
-        create_dir(output_mask_dir)
+    # for output_dir_name, json_name in dataset_list:
+    #     json_path = os.path.join(dataset_root, json_name)
+    #     output_root = os.path.join(dataset_root, output_dir_name)
+    #     output_image_dir = os.path.join(output_root, "images")
+    #     output_mask_dir = os.path.join(output_root, "masks")
+    #     create_dir(output_root)
+    #     create_dir(output_image_dir)
+    #     create_dir(output_mask_dir)
 
-        dataset = CustomDataLoader(data_dir=json_path, output_root=output_root)
+    #     dataset = CustomDataLoader(data_dir=json_path, output_root=output_root)
 
-        for i in tqdm(range(len(dataset))):
-            image_from, image_to, mask, mask_to = dataset[i]
-            copyfile(image_from, image_to)
-            cv2.imwrite(mask_to, mask)
+    #     for i in tqdm(range(len(dataset))):
+    #         image_from, image_to, mask, mask_to = dataset[i]
+    #         copyfile(image_from, image_to)
+    #         cv2.imwrite(mask_to, mask)
 
     output_dir_name = "trash_test"
     json_name = "test.json"
