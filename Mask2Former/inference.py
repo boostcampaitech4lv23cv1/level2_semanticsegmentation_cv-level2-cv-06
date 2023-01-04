@@ -18,6 +18,7 @@ warnings.filterwarnings("ignore")
 from typing import List, Optional, Tuple
 
 import albumentations as A
+import cv2
 import torch
 import torch.nn as nn
 
@@ -25,7 +26,6 @@ import torch.nn as nn
 from mask2former import add_maskformer2_config
 from mlflow_config import add_mlflow_config
 from torch.utils.data import DataLoader, Dataset
-from train_dinat import add_dinat_config
 
 from detectron2.config import get_cfg
 from detectron2.data.detection_utils import read_image
@@ -46,7 +46,6 @@ def setup_cfg(args):
     cfg = get_cfg()
     add_deeplab_config(cfg)
     add_maskformer2_config(cfg)
-    add_dinat_config(cfg)  # this is only for dinat model
     add_mlflow_config(cfg)
     cfg.merge_from_file(args.config_file)
     cfg.MODEL.WEIGHTS = args.weight
@@ -107,7 +106,9 @@ class BatchPredictor(DefaultPredictor):
             pin_memory=True,
         )
         size = 256
-        transform = A.Compose([A.Resize(size, size, always_apply=True, p=1.0)])
+        transform = A.Resize(
+            size, size, p=1.0, always_apply=True, interpolation=cv2.INTER_NEAREST
+        )
         preds_array = np.empty((0, size**2), dtype=np.long)
         with torch.no_grad():
             for batch in tqdm(loader, total=len(loader)):
@@ -117,7 +118,7 @@ class BatchPredictor(DefaultPredictor):
                 ).argmax(1)
                 outs = outs.detach().cpu().numpy()
                 for out in outs:
-                    # out=out.astype(np.uint8)
+                    out = out.astype(np.uint8)
                     mask = transform(image=out)["image"]
                     oms = mask.reshape([1, -1]).astype(int)
                     preds_array = np.vstack((preds_array, oms))
