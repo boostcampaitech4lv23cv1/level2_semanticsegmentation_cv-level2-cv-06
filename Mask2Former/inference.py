@@ -135,9 +135,6 @@ def main():
         test_files = json.load(f)
     images = test_files["images"]
     predictor = BatchPredictor(cfg)
-    size = 256
-    image_id = []
-    preds_array = np.empty((0, size**2), dtype=np.long)
     print("Start inference")
     image_id, preds_array = predictor(images)
     print("End inference")
