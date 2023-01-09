@@ -84,7 +84,8 @@
     | --- | --- | --- | --- |
     | Mask2Former | 0.0001 | AdamW | WarmupPolyLr+MultiStep |
 - Ensemble(Final Submission)
-    1. Pixel 단위 Ensemble → Masking Image에 Noise가 발생
+
+     a. Pixel 단위 Ensemble → Masking Image에 Noise가 발생
     
     ![ensemble.PNG](./images/3.png)
     
