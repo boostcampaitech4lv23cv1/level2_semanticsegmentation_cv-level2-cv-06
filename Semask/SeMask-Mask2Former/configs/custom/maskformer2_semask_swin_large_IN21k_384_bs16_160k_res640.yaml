@@ -1,0 +1,48 @@
+_BASE_: semask_maskformer2_R50_bs16_160k.yaml
+OUTPUT_DIR: ./semask_maskformer2_swinL_final
+MLFLOW:
+ EXPERIMENT_NAME: "Semask_mask2former_train_all2"
+ RUN_DESCRIPTION:  "SeMask_maskformer2_swin_large_IN21k_384_bs16_160k_train_all"
+ RUN_NAME: "SeMask_mask2former_swinL_train_all"
+ TRACKING_URI: "http://211.114.51.32:5000"
+ ARTIFACT_URI: "sftp://noops:zhflsdl3@211.114.51.32:5005/noops_storage/noops-mlflow-tracking-server/artifacts"
+MODEL:
+  BACKBONE:
+    NAME: "D2SeMaskSwinTransformer"
+  SWIN:
+    EMBED_DIM: 192
+    DEPTHS: [2, 2, 18, 2]
+    NUM_HEADS: [6, 12, 24, 48]
+    WINDOW_SIZE: 12
+    SEM_WINDOW_SIZE: 12
+    NUM_SEM_BLOCKS: 1
+    APE: False
+    DROP_PATH_RATE: 0.3
+    PATCH_NORM: True
+    PRETRAIN_IMG_SIZE: 384
+  WEIGHTS: "/opt/ml/aistage/detectron2/Semask/SeMask-Mask2Former/semask_maskformer2_swinL_real/model_final.pth"
+  PIXEL_MEAN: [123.675, 116.280, 103.530]
+  PIXEL_STD: [58.395, 57.120, 57.375]
+SOLVER:
+  BASE_LR: 0.00001
+INPUT:
+  MIN_SIZE_TRAIN: !!python/object/apply:eval ["[int(x * 0.1 * 640) for x in range(5, 21)]"]
+  MIN_SIZE_TRAIN_SAMPLING: "choice"
+  MIN_SIZE_TEST: 640
+  MAX_SIZE_TRAIN: 2560
+  MAX_SIZE_TEST: 2560
+  CROP:
+    ENABLED: True
+    TYPE: "absolute"
+    SIZE: (640, 640)
+    SINGLE_CATEGORY_MAX_AREA: 1.0
+  COLOR_AUG_SSD: True
+  SIZE_DIVISIBILITY: 640  # used in dataset mapper
+  FORMAT: "RGB"
+TEST:
+  EVAL_PERIOD: 1000000
+  AUG:
+    ENABLED: False
+    MIN_SIZES: [320, 480, 640, 800, 960, 1120]
+    MAX_SIZE: 4480
+    FLIP: True
