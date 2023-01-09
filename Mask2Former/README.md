@@ -71,3 +71,8 @@ cd Mask2Former
 python train_net_mlflow.py --config-file configs/custom/maskformer2_R50_bs16_160k_mlflow.yaml
 ```
 3) Mask2Former/configs/custom 내의 파일 수정하여 사용
+
+
+## DiNAT 사용법
+
+[참고](https://github.com/SHI-Labs/Neighborhood-Attention-Transformer/tree/main/mask2former)
