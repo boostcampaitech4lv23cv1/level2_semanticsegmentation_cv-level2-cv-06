@@ -21,8 +21,7 @@ MODEL:
         [1, 1, 1, 1, 1],
       ]
     DROP_PATH_RATE: 0.3
-  # WEIGHTS: "https://shi-labs.com/projects/dinat/checkpoints/m2f/mask2former_dinat_large_ade20k_semantic.pth"
-  WEIGHTS: "https://shi-labs.com/projects/dinat/checkpoints/m2f/mask2former_dinat_large_ade20k_panoptic.pth"
+  WEIGHTS: "https://shi-labs.com/projects/dinat/checkpoints/m2f/mask2former_dinat_large_ade20k_semantic.pth"
   PIXEL_MEAN: [123.675, 116.280, 103.530]
   PIXEL_STD: [58.395, 57.120, 57.375]
 SOLVER:
