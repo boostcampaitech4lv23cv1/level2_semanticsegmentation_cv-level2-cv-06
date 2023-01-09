@@ -20,11 +20,10 @@
 
 | 팀원 / 역할 | Streamlit | Detectron2 | Paper Review |
 | --- | --- | --- | --- |
-| 오주헌 | Data Viewer 레이블 표시 | DiNAT, SegFormer | https://velog.io/@ozoooooh/%EB%85%BC%EB%AC%B8%EB%A6%AC%EB%B7%B0Dilated-Neighborhood-Attention-Transformer |
-| 강민수 | Segmentation 시각화 | MaskDino/DenseCRF/Ensemble/ Copy and Paste | https://velog.io/@tec10182/ClassMix |
-| 신성윤 | Albumentation demo 통합
-제출 파일(image, mask) 시각화 | Mask2Former / Copy and Paste | https://arxiv.org/abs/2112.01527 |
-| 나성근 | Data distribution 시각화 | SeMaskMask2Former/Pseudo Labeling | https://arxiv.org/abs/2112.12782 |
+| 오주헌 | Data Viewer 레이블 표시 | DiNAT, SegFormer | [DiNAT](https://velog.io/@ozoooooh/%EB%85%BC%EB%AC%B8%EB%A6%AC%EB%B7%B0Dilated-Neighborhood-Attention-Transformer) |
+| 강민수 | Segmentation 시각화 | MaskDino/DenseCRF/Ensemble/ Copy and Paste | [ClassMix](https://velog.io/@tec10182/ClassMix) |
+| 신성윤 | Albumentation demo 통합 | 제출 파일(image, mask) 시각화 | Mask2Former / Copy and Paste | [Mask2Former](https://velog.io/@sshinohs/MaskFormer-Mask2Former) |
+| 나성근 | Data distribution 시각화 | SeMaskMask2Former/Pseudo Labeling | [SeMask]https://arxiv.org/abs/2112.12782 |
 | 박시형 | Streamlit Data Viewer Page | SegViT, SeMaskFAPN | https://arxiv.org/abs/2010.01824 |
 
 ### 프로젝트 수행 절차 및 방법
