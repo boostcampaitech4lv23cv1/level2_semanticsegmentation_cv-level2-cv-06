@@ -18,7 +18,7 @@
 - **Output :** 모델은 Pixel 좌표에 따라 카테고리 값을 리턴합니다. 이를 Submission 양식에 맞게 csv 파일을 만들어 제출합니다.
 - 프로젝트 팀 구성 및 역할
 
-| 팀원 / 역할 | Streamlit | Detectron2 | Paper Review |
+| 팀원 / 역할 | [Streamlit](https://github.com/SeongKeunNA/streamlit_project) | Detectron2 | Paper Review |
 | --- | --- | --- | --- |
 | 오주헌 | Data Viewer 레이블 표시 | DiNAT, SegFormer | [DiNAT](https://velog.io/@ozoooooh/%EB%85%BC%EB%AC%B8%EB%A6%AC%EB%B7%B0Dilated-Neighborhood-Attention-Transformer) |
 | 강민수 | Segmentation 시각화 | MaskDino/DenseCRF/Ensemble/ Copy and Paste | [ClassMix](https://velog.io/@tec10182/ClassMix) |
