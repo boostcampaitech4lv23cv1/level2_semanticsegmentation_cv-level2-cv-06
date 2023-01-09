@@ -61,9 +61,3 @@ DATALOADER:
 VERSION: 2
 OUTPUT_DIR: ./mask2former_c11_fixed_image
 SEED: 47055739
-MLFLOW:
-  EXPERIMENT_NAME: "Default Experiment"
-  RUN_DESCRIPTION: "Default Description"
-  RUN_NAME: "Default Run"
-  TRACKING_URI: "http://211.114.51.32:5000"
-  ARTIFACT_URI: "sftp://noops:zhflsdl3@211.114.51.32:5005/noops_storage/noops-mlflow-tracking-server/artifacts"
