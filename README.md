@@ -32,7 +32,7 @@
     1. EDA 과정을 팀원들과 쉽게 공유
 2. Mask2Former을 이용한 Segmentation Model Architecture를 Baseline으로 설정
     1. 여러 모델 실험 (MaskDINO, SegFormer UperNet, SegViT)
-3. Backbone을 DiNAT / SeMask로 설정
+3. Backbone을 DiNAT / SeMask(백본은 아닌 추가하는 semantic layer)로 설정
 4. Dense CRF를 이용한 앙상블 전략 실험
 5. Pseudo Labeling 실험
 
